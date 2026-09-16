@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.endpoint.event.EventProducer;
 import com.example.demo.endpoint.event.model.ThumbnailRequested;
 import com.example.demo.endpoint.rest.dto.SubmissionResponse;
+import com.example.demo.endpoint.rest.mapper.SubmissionMapper;
 import com.example.demo.file.bucket.BucketComponent;
 import com.example.demo.repository.SubmissionRepository;
 import com.example.demo.repository.model.Submission;
@@ -25,6 +26,7 @@ public class SubmissionService {
   private final SubmissionRepository submissionRepository;
   private final BucketComponent bucketComponent;
   private final EventProducer<ThumbnailRequested> eventProducer;
+  private final SubmissionMapper submissionMapper;
 
   @SneakyThrows
   public SubmissionResponse createSubmission(MultipartFile file, String email) {
@@ -45,31 +47,26 @@ public class SubmissionService {
     bucketComponent.upload(tempFile, originalKey);
 
     var submission =
-        Submission.builder()
-            .id(id)
-            .email(email)
-            .thumbnailKey(null)
-            .createdAt(Instant.now())
-            .build();
+            Submission.builder()
+                    .id(id)
+                    .email(email)
+                    .thumbnailKey(null)
+                    .createdAt(Instant.now())
+                    .build();
     submissionRepository.save(submission);
 
     var event =
-        ThumbnailRequested.builder().submissionId(id).originalKey(originalKey).email(email).build();
+            ThumbnailRequested.builder()
+                    .submissionId(id)
+                    .originalKey(originalKey)
+                    .email(email)
+                    .build();
     eventProducer.accept(List.of(event));
 
-    return toResponse(submission);
+    return submissionMapper.toResponse(submission);
   }
 
   public List<SubmissionResponse> listSubmissions() {
-    return submissionRepository.findAll().stream().map(this::toResponse).toList();
-  }
-
-  private SubmissionResponse toResponse(Submission submission) {
-    return SubmissionResponse.builder()
-        .id(submission.getId())
-        .email(submission.getEmail())
-        .thumbnailKey(submission.getThumbnailKey())
-        .createdAt(submission.getCreatedAt())
-        .build();
+    return submissionRepository.findAll().stream().map(submissionMapper::toResponse).toList();
   }
 }
