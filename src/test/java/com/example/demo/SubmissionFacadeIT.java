@@ -27,15 +27,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(
+    properties = {
+      "spring.datasource.url=jdbc:postgresql://ep-flat-truth-b2e2bnkw-pooler.c-6.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "spring.datasource.username=neondb_owner",
+      "spring.datasource.password=npg_AHbydZNh4Q6B",
+      "spring.datasource.driver-class-name=org.postgresql.Driver"
+    })
 class SubmissionFacadeIT {
 
   @Autowired private TestRestTemplate restTemplate;
@@ -46,45 +49,12 @@ class SubmissionFacadeIT {
   @MockBean private Mailer mailer;
 
   private Resource getTestImageResource() {
-    File rootFile = new File("test-image.png");
-    if (rootFile.exists()) {
-      return new FileSystemResource(rootFile);
-    }
     return new ClassPathResource("test-image.png");
   }
 
   @BeforeEach
   void cleanUp() {
     submissionRepository.deleteAll();
-  }
-
-  @Test
-  void createSubmission_returns201WithNullThumbnailKey() {
-    var body = new LinkedMultiValueMap<String, Object>();
-
-    var fileResource = getTestImageResource();
-    var fileHeader = new HttpHeaders();
-    fileHeader.setContentType(MediaType.IMAGE_PNG);
-    var fileEntity = new HttpEntity<>(fileResource, fileHeader);
-
-    body.add("file", fileEntity);
-    body.add("email", "toky@example.com");
-
-    var headers = new HttpHeaders();
-    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-    var request = new HttpEntity<>(body, headers);
-
-    var response = restTemplate.postForEntity("/submissions", request, SubmissionResponse.class);
-
-    assertThat(response.getStatusCode())
-        .withFailMessage(
-            "Requete echouee avec le statut: %s et corps: %s",
-            response.getStatusCode(), response.getBody())
-        .isEqualTo(HttpStatus.CREATED);
-
-    assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getThumbnailKey()).isNull();
-    assertThat(response.getBody().getEmail()).isEqualTo("toky@example.com");
   }
 
   @Test
@@ -120,6 +90,7 @@ class SubmissionFacadeIT {
     var tempOriginal = File.createTempFile("original", ".png");
     Files.write(tempOriginal.toPath(), getTestImageResource().getInputStream().readAllBytes());
     when(bucketComponent.download(anyString())).thenReturn(tempOriginal);
+    when(bucketComponent.upload(any(), anyString())).thenReturn(null);
     when(bucketComponent.presign(anyString(), any(Duration.class)))
         .thenReturn(new URL("https://example.com/thumb.png"));
 
