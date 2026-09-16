@@ -17,17 +17,17 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class SubmissionController {
 
-    private final SubmissionService submissionService;
+  private final SubmissionService submissionService;
 
-    @PostMapping("/submissions")
-    public ResponseEntity<SubmissionResponse> createSubmission(
-            @RequestPart("file") MultipartFile file, @RequestParam("email") String email) {
-        var response = submissionService.createSubmission(file, email);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+  @PostMapping("/submissions")
+  public ResponseEntity<SubmissionResponse> createSubmission(
+      @RequestPart("file") MultipartFile file, @RequestParam("email") String email) {
+    var response = submissionService.createSubmission(file, email);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
 
-    @GetMapping("/submissions")
-    public ResponseEntity<List<SubmissionResponse>> listSubmissions() {
-        return ResponseEntity.ok(submissionService.listSubmissions());
-    }
+  @GetMapping("/submissions")
+  public ResponseEntity<List<SubmissionResponse>> listSubmissions() {
+    return ResponseEntity.ok(submissionService.listSubmissions());
+  }
 }

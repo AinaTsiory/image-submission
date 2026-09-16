@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class RestExceptionHandler {
 
-    @ExceptionHandler(InvalidSubmissionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidSubmission(InvalidSubmissionException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(exception.getMessage()));
-    }
+  @ExceptionHandler(InvalidSubmissionException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidSubmission(
+      InvalidSubmissionException exception) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(exception.getMessage()));
+  }
 }
