@@ -19,14 +19,14 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class Submission {
 
-    @Id private UUID id;
+  @Id private UUID id;
 
-    @Column(nullable = false)
-    private String email;
+  @Column(nullable = false)
+  private String email;
 
-    @Column(name = "thumbnail_key")
-    private String thumbnailKey;
+  @Column(name = "thumbnail_key")
+  private String thumbnailKey;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+  @Column(name = "created_at", nullable = false)
+  private Instant createdAt;
 }
