@@ -20,60 +20,56 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class SubmissionService {
 
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/png", "image/jpeg");
+  private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/png", "image/jpeg");
 
-    private final SubmissionRepository submissionRepository;
-    private final BucketComponent bucketComponent;
-    private final EventProducer<ThumbnailRequested> eventProducer;
+  private final SubmissionRepository submissionRepository;
+  private final BucketComponent bucketComponent;
+  private final EventProducer<ThumbnailRequested> eventProducer;
 
-    @SneakyThrows
-    public SubmissionResponse createSubmission(MultipartFile file, String email) {
-        if (file == null || file.isEmpty()) {
-            throw new InvalidSubmissionException("file must not be empty");
-        }
-        var contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new InvalidSubmissionException("file must be a PNG or JPEG image");
-        }
-
-        var id = UUID.randomUUID();
-        var extension = contentType.equals("image/png") ? "png" : "jpg";
-        var originalKey = "originals/" + id + "." + extension;
-
-        var tempFile = File.createTempFile("submission-" + id, "." + extension);
-        file.transferTo(tempFile);
-        bucketComponent.upload(tempFile, originalKey);
-
-        var submission =
-                Submission.builder()
-                        .id(id)
-                        .email(email)
-                        .thumbnailKey(null)
-                        .createdAt(Instant.now())
-                        .build();
-        submissionRepository.save(submission);
-
-        var event =
-                ThumbnailRequested.builder()
-                        .submissionId(id)
-                        .originalKey(originalKey)
-                        .email(email)
-                        .build();
-        eventProducer.accept(List.of(event));
-
-        return toResponse(submission);
+  @SneakyThrows
+  public SubmissionResponse createSubmission(MultipartFile file, String email) {
+    if (file == null || file.isEmpty()) {
+      throw new InvalidSubmissionException("file must not be empty");
+    }
+    var contentType = file.getContentType();
+    if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+      throw new InvalidSubmissionException("file must be a PNG or JPEG image");
     }
 
-    public List<SubmissionResponse> listSubmissions() {
-        return submissionRepository.findAll().stream().map(this::toResponse).toList();
-    }
+    var id = UUID.randomUUID();
+    var extension = contentType.equals("image/png") ? "png" : "jpg";
+    var originalKey = "originals/" + id + "." + extension;
 
-    private SubmissionResponse toResponse(Submission submission) {
-        return SubmissionResponse.builder()
-                .id(submission.getId())
-                .email(submission.getEmail())
-                .thumbnailKey(submission.getThumbnailKey())
-                .createdAt(submission.getCreatedAt())
-                .build();
-    }
+    var tempFile = File.createTempFile("submission-" + id, "." + extension);
+    file.transferTo(tempFile);
+    bucketComponent.upload(tempFile, originalKey);
+
+    var submission =
+        Submission.builder()
+            .id(id)
+            .email(email)
+            .thumbnailKey(null)
+            .createdAt(Instant.now())
+            .build();
+    submissionRepository.save(submission);
+
+    var event =
+        ThumbnailRequested.builder().submissionId(id).originalKey(originalKey).email(email).build();
+    eventProducer.accept(List.of(event));
+
+    return toResponse(submission);
+  }
+
+  public List<SubmissionResponse> listSubmissions() {
+    return submissionRepository.findAll().stream().map(this::toResponse).toList();
+  }
+
+  private SubmissionResponse toResponse(Submission submission) {
+    return SubmissionResponse.builder()
+        .id(submission.getId())
+        .email(submission.getEmail())
+        .thumbnailKey(submission.getThumbnailKey())
+        .createdAt(submission.getCreatedAt())
+        .build();
+  }
 }
