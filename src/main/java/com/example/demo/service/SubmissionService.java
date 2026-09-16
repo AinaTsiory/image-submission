@@ -47,20 +47,16 @@ public class SubmissionService {
     bucketComponent.upload(tempFile, originalKey);
 
     var submission =
-            Submission.builder()
-                    .id(id)
-                    .email(email)
-                    .thumbnailKey(null)
-                    .createdAt(Instant.now())
-                    .build();
+        Submission.builder()
+            .id(id)
+            .email(email)
+            .thumbnailKey(null)
+            .createdAt(Instant.now())
+            .build();
     submissionRepository.save(submission);
 
     var event =
-            ThumbnailRequested.builder()
-                    .submissionId(id)
-                    .originalKey(originalKey)
-                    .email(email)
-                    .build();
+        ThumbnailRequested.builder().submissionId(id).originalKey(originalKey).email(email).build();
     eventProducer.accept(List.of(event));
 
     return submissionMapper.toResponse(submission);

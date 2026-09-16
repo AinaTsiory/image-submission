@@ -7,12 +7,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubmissionMapper {
 
-    public SubmissionResponse toResponse(Submission submission) {
-        return SubmissionResponse.builder()
-                .id(submission.getId())
-                .email(submission.getEmail())
-                .thumbnailKey(submission.getThumbnailKey())
-                .createdAt(submission.getCreatedAt())
-                .build();
-    }
+  public SubmissionResponse toResponse(Submission submission) {
+    return SubmissionResponse.builder()
+        .id(submission.getId())
+        .email(submission.getEmail())
+        .thumbnailKey(submission.getThumbnailKey())
+        .createdAt(submission.getCreatedAt())
+        .build();
+  }
 }
